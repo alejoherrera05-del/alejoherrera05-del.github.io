@@ -1,0 +1,17 @@
+{
+  "name": "Sistema Alejandro",
+  "short_name": "Alejandro",
+  "description": "Sistema personal de entrenamiento, hidratación y progreso.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090a0d",
+  "theme_color": "#090a0d",
+  "icons": [
+    {
+      "src": "/assets/alejandro/app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

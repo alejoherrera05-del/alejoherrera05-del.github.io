@@ -1,0 +1,186 @@
+{
+  "version": "2026-07-29",
+  "scope": "Hipertrofia, nutrición deportiva, suplementación, seguimiento y reducción de riesgos farmacológicos.",
+  "safetyPolicy": {
+    "allowed": [
+      "Explicar evidencia, incertidumbre, riesgos conocidos, estado regulatorio y preguntas para un profesional sanitario.",
+      "Relacionar tendencias de entrenamiento, medidas y alimentación sin diagnosticar.",
+      "Reconocer señales de alarma y recomendar atención médica apropiada."
+    ],
+    "disallowed": [
+      "Diseñar ciclos, stacks, dosis, PCT, instrucciones de inyección o métodos para adquirir sustancias.",
+      "Normalizar el uso no médico de esteroides, SARMs, hormonas o péptidos no aprobados.",
+      "Diagnosticar, sustituir al médico o interpretar pruebas de laboratorio como una orden clínica."
+    ]
+  },
+  "entries": [
+    {
+      "id": "training-acsm-2026",
+      "domain": "entrenamiento",
+      "title": "La constancia y el volumen semanal guían la hipertrofia",
+      "claim": "La actualización ACSM 2026 prioriza constancia, trabajo de los grandes grupos musculares al menos dos días por semana y un volumen cercano a 10 series semanales por grupo como punto de partida general para hipertrofia.",
+      "application": "La app debe comparar series completadas por músculo, distribución semanal y adherencia antes de sugerir más volumen.",
+      "strength": "alta",
+      "source": {
+        "organization": "American College of Sports Medicine",
+        "year": 2026,
+        "title": "Resistance Training Guidelines Update",
+        "url": "https://acsm.org/resistance-training-guidelines-update-2026/"
+      }
+    },
+    {
+      "id": "training-failure",
+      "domain": "entrenamiento",
+      "title": "El fallo muscular no es obligatorio",
+      "claim": "Las revisiones no muestran que entrenar siempre hasta el fallo sea necesario para ganar fuerza o tamaño muscular cuando se compara con trabajo sin fallo.",
+      "application": "Usar RPE y repeticiones en reserva para controlar esfuerzo; no convertir RPE 10 en el objetivo de todas las series.",
+      "strength": "moderada",
+      "source": {
+        "organization": "PubMed",
+        "year": 2021,
+        "title": "Resistance training to repetition failure or non-failure: systematic review and meta-analysis",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/33497853/"
+      }
+    },
+    {
+      "id": "training-advanced-methods",
+      "domain": "entrenamiento",
+      "title": "Las técnicas avanzadas son opcionales",
+      "claim": "Drop sets, tempos y otros sistemas avanzados no muestran una superioridad general y consistente para hipertrofia frente a series tradicionales cuando volumen y esfuerzo son comparables.",
+      "application": "Priorizar progresión medible y técnica antes de añadir complejidad.",
+      "strength": "moderada",
+      "source": {
+        "organization": "PubMed",
+        "year": 2026,
+        "title": "Advanced Resistance Training Systems: systematic review and meta-analysis",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/41718208/"
+      }
+    },
+    {
+      "id": "nutrition-protein",
+      "domain": "alimentación",
+      "title": "La proteína apoya las adaptaciones al entrenamiento",
+      "claim": "Una gran revisión encontró beneficios de la suplementación proteica junto al entrenamiento, con un rendimiento decreciente más allá de aproximadamente 1,6 g/kg/día de proteína total.",
+      "application": "Evaluar primero la ingesta total y la consistencia; un suplemento es una herramienta para cubrir la dieta, no un sustituto de ella.",
+      "strength": "alta",
+      "source": {
+        "organization": "PubMed",
+        "year": 2018,
+        "title": "Protein supplementation and resistance training adaptations: meta-analysis",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/28698222/"
+      }
+    },
+    {
+      "id": "nutrition-energy",
+      "domain": "alimentación",
+      "title": "Un déficit energético sostenido puede limitar la masa magra",
+      "claim": "Una meta-regresión encontró que el déficit energético redujo las ganancias de masa magra con entrenamiento de fuerza, aunque no necesariamente la fuerza.",
+      "application": "Cruzar tendencia de peso, cintura, rendimiento e ingesta antes de sugerir cambios energéticos; no inventar un superávit exacto.",
+      "strength": "moderada",
+      "source": {
+        "organization": "PubMed",
+        "year": 2022,
+        "title": "Energy deficiency impairs resistance training gains in lean mass",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/34623696/"
+      }
+    },
+    {
+      "id": "supplements-creatine",
+      "domain": "suplementación",
+      "title": "La creatina tiene evidencia para esfuerzos intensos repetidos",
+      "claim": "NIH ODS resume numerosos ensayos que apoyan la creatina para fuerza, potencia y trabajo intermitente de alta intensidad, con variación individual en la respuesta.",
+      "application": "Distinguir beneficio probable, tolerancia individual, interacciones y contexto de salud; remitir al profesional si existen enfermedades o medicación.",
+      "strength": "alta",
+      "source": {
+        "organization": "NIH Office of Dietary Supplements",
+        "year": 2024,
+        "title": "Dietary Supplements for Exercise and Athletic Performance - Health Professional",
+        "url": "https://ods.od.nih.gov/factsheets/ExerciseAndAthleticPerformance-HealthProfessional/"
+      }
+    },
+    {
+      "id": "supplements-quality",
+      "domain": "suplementación",
+      "title": "Los suplementos requieren evaluación de eficacia, seguridad y calidad",
+      "claim": "Los suplementos deportivos no pasan por la misma revisión previa al mercado que los medicamentos y pueden contener combinaciones poco estudiadas o ingredientes no declarados.",
+      "application": "La IA debe separar evidencia de marketing, mostrar incertidumbre y recomendar revisión profesional ante interacciones.",
+      "strength": "alta",
+      "source": {
+        "organization": "NIH Office of Dietary Supplements",
+        "year": 2024,
+        "title": "Dietary Supplements for Exercise and Athletic Performance",
+        "url": "https://ods.od.nih.gov/factsheets/ExerciseAndAthleticPerformance-HealthProfessional/"
+      }
+    },
+    {
+      "id": "pharma-aas-risks",
+      "domain": "esteroides y anabólicos",
+      "title": "Los anabólicos androgénicos tienen riesgos multisistémicos",
+      "claim": "La declaración científica de Endocrine Society relaciona el uso de PED con riesgos cardiovasculares, psiquiátricos, metabólicos, endocrinos, hepáticos, renales, infecciosos y musculoesqueléticos.",
+      "application": "Solo educación y reducción de riesgos. No generar ciclos, dosis, stacks, PCT ni instrucciones de administración.",
+      "strength": "alta",
+      "source": {
+        "organization": "Endocrine Society",
+        "year": 2014,
+        "title": "Adverse Health Consequences of Performance-Enhancing Drugs",
+        "url": "https://www.endocrine.org/advancing-research/scientific-statements/health-policy/adverse-health-consequences-of-performance-enhancing-drugs"
+      }
+    },
+    {
+      "id": "pharma-sarms",
+      "domain": "esteroides y anabólicos",
+      "title": "Los SARMs no son suplementos aprobados",
+      "claim": "FDA advierte que los SARMs comercializados para musculación son fármacos no aprobados y se han asociado con lesión hepática, eventos cardiovasculares, disfunción sexual e infertilidad.",
+      "application": "No sugerir compra o uso. Si el usuario declara consumo o síntomas, recomendar atención profesional y no indicar retirada brusca sin supervisión.",
+      "strength": "alta",
+      "source": {
+        "organization": "U.S. Food and Drug Administration",
+        "year": 2025,
+        "title": "Body-building products: heart attack, stroke, liver damage and more",
+        "url": "https://www.fda.gov/drugs/fraudulent-products/certain-bodybuilding-products-put-consumers-risk-heart-attack-stroke-serious-liver-damage-and-more"
+      }
+    },
+    {
+      "id": "pharma-peptides",
+      "domain": "péptidos",
+      "title": "Muchos péptidos de musculación carecen de aprobación y datos humanos suficientes",
+      "claim": "FDA identifica información de seguridad humana limitada para BPC-157 y riesgos potenciales de inmunogenicidad, impurezas y caracterización del ingrediente; otros péptidos se han vendido sin aprobación para uso humano.",
+      "application": "Explicar incertidumbre y estado regulatorio; no proporcionar dosis, mezclas, reconstitución ni inyección.",
+      "strength": "alta",
+      "source": {
+        "organization": "U.S. Food and Drug Administration",
+        "year": 2026,
+        "title": "Bulk Drug Substances That May Present Significant Safety Risks",
+        "url": "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"
+      }
+    },
+    {
+      "id": "pharma-red-flags",
+      "domain": "esteroides y anabólicos",
+      "title": "Algunos síntomas requieren evaluación inmediata",
+      "claim": "FDA recomienda atención profesional ante dolor torácico, dificultad respiratoria, ictericia, orina oscura, dolor abdominal, debilidad marcada u otros síntomas asociados a productos de musculación.",
+      "application": "Ante señales de alarma, detener el coaching de rendimiento y priorizar orientación médica urgente.",
+      "strength": "alta",
+      "source": {
+        "organization": "U.S. Food and Drug Administration",
+        "year": 2025,
+        "title": "Caution: Bodybuilding Products Can Be Risky",
+        "url": "https://www.fda.gov/consumers/consumer-updates/caution-bodybuilding-products-can-be-risky"
+      }
+    },
+    {
+      "id": "antidoping-2026",
+      "domain": "antidopaje",
+      "title": "Anabólicos, hormonas peptídicas y factores de crecimiento pueden estar prohibidos",
+      "claim": "La Lista WADA 2026 prohíbe agentes anabólicos y múltiples hormonas peptídicas, factores de crecimiento y miméticos, dentro y fuera de competición.",
+      "application": "Si existe competición, comprobar siempre la lista vigente y las reglas aplicables; no asumir que una sustancia es permitida.",
+      "strength": "alta",
+      "source": {
+        "organization": "World Anti-Doping Agency",
+        "year": 2026,
+        "title": "2026 Prohibited List",
+        "url": "https://www.wada-ama.org/en/resources/world-anti-doping-program/prohibited-list"
+      }
+    }
+  ]
+}
