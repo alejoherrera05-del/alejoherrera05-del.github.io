@@ -109,3 +109,4 @@ When any text-entry control loses focus, dismiss the simulated keyboard. If the 
 - La portada de carga usa una imagen fotográfica de Alejandro como identidad: conservar sus facciones reales, sin traje, con una estética contemporánea de disciplina, poder sereno y dedicación; evitar modelos genéricos, cosplay romano y musculatura exagerada.
 - Las frases de la pantalla de carga deben permanecer visibles alrededor de seis segundos para poder leerse con calma.
 - El botón `Entrar` no debe existir visualmente durante la precarga; aparece únicamente cuando los recursos han llegado al 100 % y la aplicación está lista.
+- La portada debe mostrar a Alejandro desde la cabeza hasta, como mínimo, la cintura; evitar un primer plano dominado únicamente por el rostro. Mantener el título en el cuarto superior y reservar la zona inferior para frase, progreso y acción con separación regular.
