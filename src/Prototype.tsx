@@ -562,7 +562,7 @@ function createInitialAppState(): AppStateV2 {
 async function warmAppCache(onProgress: (value: number) => void) {
   const assets = Array.from(new Set([
     "/assets/alejandro/app-icon.png",
-    "/assets/alejandro/splash.png",
+    "/assets/alejandro/splash-v2.png",
     "/assets/alejandro/bottle-flat.png",
     "/assets/alejandro/measurement-guide.png",
     ...exerciseCatalog.map((exercise) => exercise.image),
@@ -773,7 +773,7 @@ export default function Prototype() {
 
   useEffect(() => {
     let cancelled = false;
-    const warmStart = localStorage.getItem("alejandro:cache-version") === "v1";
+    const warmStart = localStorage.getItem("alejandro:cache-version") === "v2";
     const minimumDisplay = new Promise((resolve) => window.setTimeout(resolve, warmStart ? 350 : 1800));
     void Promise.all([
       warmAppCache((progress) => {
@@ -784,7 +784,7 @@ export default function Prototype() {
       if (cancelled) return;
       setBootProgress(100);
       setBootReady(true);
-      localStorage.setItem("alejandro:cache-version", "v1");
+      localStorage.setItem("alejandro:cache-version", "v2");
       void navigator.storage?.persist?.().catch(() => false);
     });
     return () => { cancelled = true; };
@@ -792,7 +792,7 @@ export default function Prototype() {
 
   useEffect(() => {
     if (entered) return;
-    const timer = window.setInterval(() => setBootQuoteIndex((current) => (current + 1) % bootQuotes.length), 1400);
+    const timer = window.setInterval(() => setBootQuoteIndex((current) => (current + 1) % bootQuotes.length), 6200);
     return () => window.clearInterval(timer);
   }, [entered]);
 
@@ -1422,7 +1422,7 @@ export default function Prototype() {
   if (!entered) {
     return (
       <section className="splash-screen" aria-label="Bienvenida a Sistema Alejandro">
-        <img src="/assets/alejandro/splash.png" alt="Atleta contemplando las montañas al amanecer" className="splash-image" draggable={false} />
+        <img src="/assets/alejandro/splash-v2.png" alt="Alejandro preparado para entrenar al amanecer" className="splash-image" draggable={false} />
         <div className="splash-shade" />
         <div className="splash-brand">
           <img className="brand-logo" src="/assets/alejandro/app-icon.png" alt="Símbolo de Sistema Alejandro" />
@@ -1440,7 +1440,13 @@ export default function Prototype() {
             <div className="boot-progress"><i style={{ width: `${bootProgress}%` }} /></div>
             <small>{bootReady ? "Rutinas, historial y recursos disponibles sin esperas repetidas." : "La primera preparación evita cargas al navegar después."}</small>
           </div>
-          <button className="enter-button" disabled={!bootReady} onClick={() => { dismissKeyboard(); setEntered(true); }}>{bootReady ? "Entrar" : "Preparando"} <ChevronRightIcon /></button>
+          <div className="enter-slot">
+            {bootReady && (
+              <button className="enter-button" onClick={() => { dismissKeyboard(); setEntered(true); }}>
+                Entrar <ChevronRightIcon />
+              </button>
+            )}
+          </div>
         </div>
       </section>
     );

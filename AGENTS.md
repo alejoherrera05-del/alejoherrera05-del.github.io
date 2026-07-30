@@ -106,3 +106,6 @@ When any text-entry control loses focus, dismiss the simulated keyboard. If the 
 - El registro admite biseries/superseries entre ejercicios de la rutina y debe permitir alternar con un solo toque, sin perder los valores ingresados.
 - RPE siempre incluye una explicación visible basada en repeticiones en reserva; los descansos son configurables y ajustables en pasos rápidos de 15 segundos.
 - El historial de entrenamiento debe filtrar y paginar resultados para no montar cientos de sesiones al navegar.
+- La portada de carga usa una imagen fotográfica de Alejandro como identidad: conservar sus facciones reales, sin traje, con una estética contemporánea de disciplina, poder sereno y dedicación; evitar modelos genéricos, cosplay romano y musculatura exagerada.
+- Las frases de la pantalla de carga deben permanecer visibles alrededor de seis segundos para poder leerse con calma.
+- El botón `Entrar` no debe existir visualmente durante la precarga; aparece únicamente cuando los recursos han llegado al 100 % y la aplicación está lista.
