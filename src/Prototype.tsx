@@ -19,6 +19,7 @@ import {
   ReaderIcon,
   RocketIcon,
   StopwatchIcon,
+  TrashIcon,
 } from "@radix-ui/react-icons";
 import { BottomSheet, Carousel, KeyboardInput, MobileScroll, useKeyboard } from "./mobile";
 import knowledgeBase from "../knowledge/fitness-knowledge.json";
@@ -562,7 +563,7 @@ function createInitialAppState(): AppStateV2 {
 async function warmAppCache(onProgress: (value: number) => void) {
   const assets = Array.from(new Set([
     "/assets/alejandro/app-icon.png",
-    "/assets/alejandro/splash-v3.png",
+    "/assets/alejandro/splash-v6.png",
     "/assets/alejandro/bottle-flat.png",
     "/assets/alejandro/measurement-guide.png",
     ...exerciseCatalog.map((exercise) => exercise.image),
@@ -773,7 +774,7 @@ export default function Prototype() {
 
   useEffect(() => {
     let cancelled = false;
-    const warmStart = localStorage.getItem("alejandro:cache-version") === "v3";
+    const warmStart = localStorage.getItem("alejandro:cache-version") === "v6";
     const minimumDisplay = new Promise((resolve) => window.setTimeout(resolve, warmStart ? 350 : 1800));
     void Promise.all([
       warmAppCache((progress) => {
@@ -784,7 +785,7 @@ export default function Prototype() {
       if (cancelled) return;
       setBootProgress(100);
       setBootReady(true);
-      localStorage.setItem("alejandro:cache-version", "v3");
+      localStorage.setItem("alejandro:cache-version", "v6");
       void navigator.storage?.persist?.().catch(() => false);
     });
     return () => { cancelled = true; };
@@ -1065,6 +1066,29 @@ export default function Prototype() {
     openExercise(id);
   };
 
+  const deleteExercise = (id: string) => {
+    const exerciseName = exerciseCatalog.find((exercise) => exercise.id === id)?.name || "Ejercicio";
+    const fallbackId = routineIds.find((exerciseId) => exerciseId !== id) || exerciseCatalog[0].id;
+    setWeeklyPlan((current) => ({
+      ...current,
+      [selectedDay]: current[selectedDay].filter((exerciseId) => exerciseId !== id),
+    }));
+    setSessionDrafts((current) => {
+      const draft = current[sessionKey];
+      if (!draft?.setsByExercise[id]) return current;
+      const nextSets = { ...draft.setsByExercise };
+      delete nextSets[id];
+      return { ...current, [sessionKey]: { ...draft, setsByExercise: nextSets } };
+    });
+    setSupersetPairs((current) => Object.fromEntries(
+      Object.entries(current).filter(([key, partnerId]) =>
+        !(key.startsWith(`${sessionKey}:`) && (key === `${sessionKey}:${id}` || partnerId === id)),
+      ),
+    ));
+    if (selectedExerciseId === id) setSelectedExerciseId(fallbackId);
+    showToast(`${exerciseName} eliminado del ${selectedDay.toLowerCase()}`);
+  };
+
   const chooseWeekPlan = (reuse: boolean) => {
     const previousPlan = weeklyPlansByWeek[previousWeekKey()];
     setWeeklyPlan(reuse && previousPlan ? previousPlan : emptyWeeklyPlan());
@@ -1084,7 +1108,7 @@ export default function Prototype() {
         const rpe = Number(target.rpe);
         const weightValue = Number(target.weight);
         if (!Number.isFinite(weightValue) || weightValue < 0 || !Number.isFinite(reps) || reps < 1 || !Number.isFinite(rpe) || rpe < 1 || rpe > 10) {
-          showToast("Completa peso, repeticiones y RPE entre 1 y 10");
+          showToast("Completa peso y repeticiones. En esfuerzo, escribe un número del 1 al 10.");
           return current;
         }
       }
@@ -1422,7 +1446,7 @@ export default function Prototype() {
   if (!entered) {
     return (
       <section className="splash-screen" aria-label="Bienvenida a Sistema Alejandro">
-        <img src="/assets/alejandro/splash-v3.png" alt="Alejandro preparado para entrenar al amanecer" className="splash-image" draggable={false} />
+        <img src="/assets/alejandro/splash-v6.png" alt="Alejandro preparado para entrenar al amanecer" className="splash-image" draggable={false} />
         <div className="splash-shade" />
         <div className="splash-brand">
           <img className="brand-logo" src="/assets/alejandro/app-icon.png" alt="Símbolo de Sistema Alejandro" />
@@ -1491,6 +1515,7 @@ export default function Prototype() {
               showReusePrompt={showReusePrompt}
               onChooseWeekPlan={chooseWeekPlan}
               onOpen={openExercise}
+              onDelete={deleteExercise}
               onLibrary={() => { dismissKeyboard(); setTrainingView("biblioteca"); }}
               onHistory={() => { dismissKeyboard(); setTrainingView("historial"); }}
               onSave={saveWorkout}
@@ -1849,14 +1874,105 @@ function Metric({ label, value, trend }: { label: string; value: string; trend: 
   return <article className="metric-card"><small>{label}</small><strong>{value}</strong><em>{trend}</em></article>;
 }
 
-function RoutineScreen({ routine, setsByExercise, partnerByExercise, completion, selectedDay, onSelectedDay, routineName: activeName, showReusePrompt, onChooseWeekPlan, onOpen, onLibrary, onHistory, onSave, activeStartedAt }: {
+function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOpen, onDelete }: {
+  exercise: ExerciseDefinition;
+  index: number;
+  sets: WorkoutSet[];
+  partner?: ExerciseDefinition;
+  open: boolean;
+  onReveal: (id: string | null) => void;
+  onOpen: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const actionWidth = 86;
+  const [offset, setOffsetState] = useState(open ? -actionWidth : 0);
+  const offsetRef = useRef(offset);
+  const draggingRef = useRef(false);
+  const startRef = useRef({ x: 0, y: 0, offset: 0 });
+  const suppressClickUntilRef = useRef(0);
+  const [dragging, setDragging] = useState(false);
+  const done = sets.some((set) => set.done);
+
+  const setOffset = (value: number) => {
+    offsetRef.current = value;
+    setOffsetState(value);
+  };
+
+  useEffect(() => {
+    if (!draggingRef.current) setOffset(open ? -actionWidth : 0);
+  }, [open]);
+
+  return (
+    <article className="swipe-exercise-row">
+      <button
+        className="swipe-delete-action"
+        aria-label={`Eliminar ${exercise.name}`}
+        aria-hidden={!open}
+        tabIndex={open ? 0 : -1}
+        disabled={!open}
+        onClick={() => onDelete(exercise.id)}
+      >
+        <TrashIcon />
+        <span>Eliminar</span>
+      </button>
+      <button
+        className={dragging ? "exercise-row swiping" : "exercise-row"}
+        style={{ transform: `translateX(${offset}px)` }}
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          draggingRef.current = true;
+          setDragging(true);
+          startRef.current = { x: event.clientX, y: event.clientY, offset: open ? -actionWidth : 0 };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          if (!draggingRef.current) return;
+          const deltaX = event.clientX - startRef.current.x;
+          const deltaY = event.clientY - startRef.current.y;
+          if (Math.abs(deltaX) <= Math.abs(deltaY) || Math.abs(deltaX) < 4) return;
+          suppressClickUntilRef.current = Date.now() + 300;
+          setOffset(Math.max(-actionWidth, Math.min(0, startRef.current.offset + deltaX)));
+        }}
+        onPointerUp={(event) => {
+          if (!draggingRef.current) return;
+          draggingRef.current = false;
+          setDragging(false);
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+          const shouldReveal = offsetRef.current <= -(actionWidth * .45);
+          setOffset(shouldReveal ? -actionWidth : 0);
+          onReveal(shouldReveal ? exercise.id : null);
+        }}
+        onPointerCancel={() => {
+          draggingRef.current = false;
+          setDragging(false);
+          setOffset(open ? -actionWidth : 0);
+        }}
+        onClick={() => {
+          if (Date.now() < suppressClickUntilRef.current) return;
+          if (open) {
+            onReveal(null);
+            return;
+          }
+          onOpen(exercise.id);
+        }}
+      >
+        <span className="exercise-number">{index + 1}</span>
+        <span><strong>{exercise.name}</strong><small>{exercise.prescription} · {sets.filter((set) => set.done).length} registradas</small>{partner && <em>Biserie con {partner.name}</em>}</span>
+        {done ? <CheckCircledIcon className="done" /> : <CircleIcon />}
+      </button>
+    </article>
+  );
+}
+
+function RoutineScreen({ routine, setsByExercise, partnerByExercise, completion, selectedDay, onSelectedDay, routineName: activeName, showReusePrompt, onChooseWeekPlan, onOpen, onDelete, onLibrary, onHistory, onSave, activeStartedAt }: {
   routine: ExerciseDefinition[]; setsByExercise: Record<string, WorkoutSet[]>; completion: number;
   partnerByExercise: Record<string, string>;
   selectedDay: WeekDay; onSelectedDay: (day: WeekDay) => void; routineName: string;
   showReusePrompt: boolean; onChooseWeekPlan: (reuse: boolean) => void;
-  onOpen: (id: string) => void; onLibrary: () => void; onHistory: () => void; onSave: () => void;
+  onOpen: (id: string) => void; onDelete: (id: string) => void; onLibrary: () => void; onHistory: () => void; onSave: () => void;
   activeStartedAt?: string;
 }) {
+  const [revealedExerciseId, setRevealedExerciseId] = useState<string | null>(null);
   const completedSets = routine.flatMap((exercise) => setsByExercise[exercise.id] || []).filter((set) => set.done);
   const plannedSets = routine.length * 4;
   return (
@@ -1876,18 +1992,26 @@ function RoutineScreen({ routine, setsByExercise, partnerByExercise, completion,
         <div><small>Series</small><strong>{completedSets.length}/{plannedSets}</strong></div>
         <div><small>RPE medio</small><strong>{average(completedSets.map((set) => Number(set.rpe))).toFixed(1)}</strong></div>
       </section>
-      <div className="section-title"><h2>Ejercicios</h2><span>Toca para registrar</span></div>
+      <div className="section-title"><h2>Ejercicios</h2><span>Toca para registrar · desliza para borrar</span></div>
       <section className="exercise-list">
         {routine.map((exercise, index) => {
           const sets = setsByExercise[exercise.id] || [];
-          const done = sets.some((set) => set.done);
           const partner = routine.find((item) => item.id === partnerByExercise[exercise.id]);
           return (
-            <button key={exercise.id} className="exercise-row" onClick={() => onOpen(exercise.id)}>
-              <span className="exercise-number">{index + 1}</span>
-              <span><strong>{exercise.name}</strong><small>{exercise.prescription} · {sets.filter((set) => set.done).length} registradas</small>{partner && <em>Biserie con {partner.name}</em>}</span>
-              {done ? <CheckCircledIcon className="done" /> : <CircleIcon />}
-            </button>
+            <SwipeExerciseRow
+              key={exercise.id}
+              exercise={exercise}
+              index={index}
+              sets={sets}
+              partner={partner}
+              open={revealedExerciseId === exercise.id}
+              onReveal={setRevealedExerciseId}
+              onOpen={onOpen}
+              onDelete={(id) => {
+                setRevealedExerciseId(null);
+                onDelete(id);
+              }}
+            />
           );
         })}
       </section>
@@ -1970,13 +2094,13 @@ function ExerciseLogger({ exercise, routine, sets, partnerId, defaultRestSeconds
         <img src={exercise.image} alt={`Ejecución de ${exercise.name}`} />
       </section>
       <section className="set-card">
-        <div className="set-head"><span>Serie</span><span>Peso kg</span><span>Reps</span><span>RPE</span><span /></div>
+        <div className="set-head"><span>Serie</span><span>Peso kg</span><span>Reps</span><span className="effort-heading">Esfuerzo<small>RPE</small></span><span /></div>
         {sets.map((set, index) => (
           <div className={set.done ? "set-row complete" : "set-row"} key={set.id}>
             <strong>{index + 1}</strong>
             <KeyboardInput aria-label={`Peso serie ${index + 1}`} value={set.weight} onChange={(event) => onUpdate(set.id, "weight", event.target.value)} inputMode="decimal" />
             <KeyboardInput aria-label={`Repeticiones serie ${index + 1}`} value={set.reps} onChange={(event) => onUpdate(set.id, "reps", event.target.value)} inputMode="numeric" />
-            <KeyboardInput aria-label={`RPE serie ${index + 1}`} value={set.rpe} onChange={(event) => onUpdate(set.id, "rpe", event.target.value)} inputMode="decimal" />
+            <KeyboardInput aria-label={`Esfuerzo RPE de la serie ${index + 1}`} value={set.rpe} onChange={(event) => onUpdate(set.id, "rpe", event.target.value)} inputMode="decimal" placeholder="8" />
             <button onClick={() => {
               const willComplete = !set.done;
               onUpdate(set.id, "done", willComplete);
@@ -1985,7 +2109,19 @@ function ExerciseLogger({ exercise, routine, sets, partnerId, defaultRestSeconds
           </div>
         ))}
         <button className="add-set" onClick={onAdd}><PlusIcon /> Agregar serie</button>
-        <p className="rpe-help"><strong>RPE (esfuerzo percibido):</strong> 7 ≈ 3 repeticiones en reserva; 8 ≈ 2; 9 ≈ 1; 10 = sin repeticiones limpias disponibles.</p>
+        <div className="rpe-guide">
+          <div className="rpe-guide-title">
+            <ReaderIcon />
+            <span><strong>¿Qué número pongo en esfuerzo?</strong><small>Al terminar la serie, piensa: “¿Cuántas repeticiones más podía hacer bien?”</small></span>
+          </div>
+          <div className="rpe-scale" aria-label="Guía sencilla de esfuerzo RPE">
+            <span><b>10</b><em>Ninguna más</em></span>
+            <span><b>9</b><em>Una más</em></span>
+            <span className="recommended"><b>8</b><em>Dos más</em></span>
+            <span><b>7</b><em>Tres más</em></span>
+          </div>
+          <p><strong>Para ganar músculo:</strong> normalmente registra <b>8 o 9</b>. Usa 10 solo algunas veces y únicamente si mantuviste una buena técnica.</p>
+        </div>
       </section>
       <section className={restSeconds ? "rest-timer active" : "rest-timer"}>
         <StopwatchIcon />
