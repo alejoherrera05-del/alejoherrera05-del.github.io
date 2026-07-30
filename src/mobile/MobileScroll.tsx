@@ -353,6 +353,10 @@ export function MobileScroll({ className, children }: MobileScrollProps) {
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const scroll = scrollRef.current;
     if (!scroll || scroll.scrollHeight <= scroll.clientHeight) return;
+    // Real phones already provide tuned momentum, deceleration and edge handling.
+    // Synthetic pointer physics on top of native touch scrolling caused jumps,
+    // over-fast flings and accidental horizontal actions on iOS.
+    if (event.pointerType === "touch") return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
 
     stopInertia();

@@ -120,3 +120,11 @@ When any text-entry control loses focus, dismiss the simulated keyboard. If the 
 - La biblioteca muestra resultados en bloques de 10 con un final visible. No montar decenas de ejercicios en una lista aparentemente infinita.
 - Priorizar legibilidad real en iPhone: títulos de tarjeta alrededor de 16 px, texto funcional de 12–14 px, campos numéricos de 16 px y objetivos táctiles de al menos 44 px. Es preferible usar más scroll vertical que comprimir la información.
 - La versión pública no usa el rebote sintético del prototipo. El desplazamiento debe sentirse estable y el gesto horizontal de las filas de rutina debe ceder correctamente al borrado estilo iOS.
+- En un iPhone real, `KeyboardInput` debe usar el teclado nativo y nunca montar a la vez el teclado visual del simulador. Todos los campos numéricos mantienen `inputMode`, un tamaño mínimo de 16 px y una acción clara para cerrar el teclado.
+- En dispositivos táctiles, `MobileScroll` cede por completo al desplazamiento nativo del sistema. La física sintética queda limitada a la revisión con puntero y no debe superponerse al momentum de iOS.
+- El gesto de borrado de una fila se bloquea por eje: un movimiento vertical nunca revela la acción roja; solo un desplazamiento horizontal intencional puede abrirla.
+- `Trabajo total` debe explicarse como peso por repeticiones sumado entre series. `Máximo estimado (e1RM)` debe explicarse como una referencia calculada de fuerza para una repetición y nunca como una prueba que Alejandro deba realizar.
+- Cardio forma parte de la biblioteca. La caminadora registra cuatro bloques con minutos, km/h y esfuerzo; no reutilizar etiquetas de peso o repeticiones para ese ejercicio.
+- Las aperturas en máquina se nombran explícitamente `Aperturas en máquina (pec deck)` y usan una ilustración PNG que muestre la máquina correcta.
+- Todas las ilustraciones de la biblioteca deben compartir un fondo oscuro neutro; normalizar activos heredados con fondo blanco antes de publicarlos.
+- Inicio incluye un acceso premium y directo a `Alejandro IA` cerca del encabezado. El análisis usa un activo visual real de cerebro neuronal, movimiento sutil con respeto a `prefers-reduced-motion`, pestañas funcionales y estados vacíos honestos; nunca muestra conclusiones ficticias sin datos.

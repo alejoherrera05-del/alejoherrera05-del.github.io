@@ -39,7 +39,7 @@ type NutritionMode = "suplementos" | "hidratacion";
 type TrainingView = "rutina" | "biblioteca" | "registro" | "historial";
 type ProgressSection = "medidas" | "fotos";
 type MeasureView = "actual" | "historial" | "comparar";
-type Muscle = "Pecho" | "Espalda" | "Hombros" | "Bíceps" | "Tríceps" | "Cuádriceps" | "Glúteos" | "Femorales" | "Abdominales";
+type Muscle = "Pecho" | "Espalda" | "Hombros" | "Bíceps" | "Tríceps" | "Cuádriceps" | "Glúteos" | "Femorales" | "Abdominales" | "Cardio";
 type Equipment = "Barra" | "Mancuernas" | "Máquina" | "Polea" | "Peso corporal";
 type WeekDay = "Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes";
 type WeeklyPlan = Record<WeekDay, string[]>;
@@ -103,6 +103,8 @@ type SavedWorkoutSet = {
   weightKg: number;
   reps: number;
   rpe: number;
+  durationMinutes?: number;
+  speedKph?: number;
 };
 
 type SessionDraft = {
@@ -250,7 +252,7 @@ const exerciseNames: Record<Muscle, Array<[string, Equipment, string, string]>> 
     ["Aperturas", "Polea", "3 × 12–15", "Abraza al frente sin perder tensión."],
     ["Fondos para pecho", "Peso corporal", "3 × 6–12", "Inclina ligeramente el torso y evita rebotes."],
     ["Flexiones", "Peso corporal", "3 × 10–20", "Cuerpo firme y pecho cerca del suelo."],
-    ["Pec deck", "Máquina", "3 × 12–15", "Mantén el pecho alto y no golpees los topes."],
+    ["Aperturas en máquina (pec deck)", "Máquina", "3 × 12–15", "Mantén el pecho alto, apoya la espalda y cierra los brazos sin golpear los topes."],
     ["Press inclinado Smith", "Máquina", "3 × 8–12", "Coloca el banco para una trayectoria natural."],
     ["Press inclinado plate-loaded", "Máquina", "3 × 8–12", "Ajusta el asiento y evita perder contacto con el respaldo."],
     ["Press declinado", "Barra", "3 × 6–10", "Mantén escápulas estables y usa un asistente."],
@@ -347,6 +349,9 @@ const exerciseNames: Record<Muscle, Array<[string, Equipment, string, string]>> 
     ["Dead bug", "Peso corporal", "3 × 8–12", "Mantén la zona lumbar estable."],
     ["Crunch abdominal", "Máquina", "3 × 10–15", "Ajusta la máquina y flexiona el tronco con control."],
   ],
+  Cardio: [
+    ["Caminadora", "Máquina", "4 × 5 min", "Camina a un ritmo que puedas sostener. Ajusta la velocidad sin agarrarte de las barras."],
+  ],
 };
 
 const exerciseImageOverride: Record<string, string> = {
@@ -356,7 +361,7 @@ const exerciseImageOverride: Record<string, string> = {
   "Aperturas": "/assets/exercises/chest-cable-fly.png",
   "Fondos para pecho": "/assets/exercises/chest-dips.png",
   "Flexiones": "/assets/exercises/chest-pushup.png",
-  "Pec deck": "/assets/exercises/chest-pec-deck.png",
+  "Aperturas en máquina (pec deck)": "/assets/exercises/chest-machine-fly-v2.png",
   "Press inclinado Smith": "/assets/exercises/chest-incline-smith.png",
   "Press inclinado plate-loaded": "/assets/exercises/chest-incline-plate-loaded.png",
   "Press declinado": "/assets/exercises/chest-decline-bench.png",
@@ -436,6 +441,7 @@ const exerciseImageOverride: Record<string, string> = {
   "Pallof press": "/assets/exercises/abs-pallof-press.png",
   "Dead bug": "/assets/exercises/abs-dead-bug.png",
   "Crunch abdominal": "/assets/exercises/abs-machine-crunch.png",
+  "Caminadora": "/assets/exercises/cardio-treadmill.png",
 };
 
 const imageForExercise = (name: string, equipment: Equipment) => {
@@ -1038,13 +1044,15 @@ export default function Prototype() {
         setsByExercise: {},
       };
       if (existing.setsByExercise[id]) return current;
+      const selectedExercise = exerciseCatalog.find((exercise) => exercise.id === id);
+      const isCardio = selectedExercise?.muscle === "Cardio";
       const previousWorkout = workoutHistory.find((workout) => workout.sets.some((set) => set.exerciseId === id));
       const previousSets = previousWorkout?.sets
         .filter((set) => set.exerciseId === id)
         .map((set) => ({
           id: crypto.randomUUID(),
-          weight: String(set.weightKg || ""),
-          reps: String(set.reps || ""),
+          weight: String(isCardio ? set.durationMinutes || "" : set.weightKg || ""),
+          reps: String(isCardio ? set.speedKph || "" : set.reps || ""),
           rpe: String(set.rpe || ""),
           done: false,
         }));
@@ -1107,12 +1115,15 @@ export default function Prototype() {
       if (!draft) return current;
       const target = draft.setsByExercise[exerciseId]?.find((set) => set.id === setId);
       if (!target) return current;
+      const isCardio = exerciseCatalog.find((exercise) => exercise.id === exerciseId)?.muscle === "Cardio";
       if (field === "done" && value === true) {
         const reps = Number(target.reps);
         const rpe = Number(target.rpe);
         const weightValue = Number(target.weight);
         if (!Number.isFinite(weightValue) || weightValue < 0 || !Number.isFinite(reps) || reps < 1 || !Number.isFinite(rpe) || rpe < 1 || rpe > 10) {
-          showToast("Completa peso y repeticiones. En esfuerzo, escribe un número del 1 al 10.");
+          showToast(isCardio
+            ? "Completa minutos, velocidad y esfuerzo del 1 al 10."
+            : "Completa peso y repeticiones. En esfuerzo, escribe un número del 1 al 10.");
           return current;
         }
       }
@@ -1171,9 +1182,13 @@ export default function Prototype() {
         muscle: exercise.muscle,
         equipment: exercise.equipment,
         setNumber: index + 1,
-        weightKg: Number(set.weight) || 0,
-        reps: Number(set.reps) || 0,
+        weightKg: exercise.muscle === "Cardio" ? 0 : Number(set.weight) || 0,
+        reps: exercise.muscle === "Cardio" ? 0 : Number(set.reps) || 0,
         rpe: Number(set.rpe) || 0,
+        ...(exercise.muscle === "Cardio" ? {
+          durationMinutes: Number(set.weight) || 0,
+          speedKph: Number(set.reps) || 0,
+        } : {}),
       }] : []),
     );
     if (!completedSets.length) {
@@ -1839,6 +1854,11 @@ function HomeScreen({ profile, goalPlan, water, waterGoal, completion, selectedD
   return (
     <>
       <ScreenHeader eyebrow={formatToday()} title={`Buenos días, ${profile.name}.`} action={<button className="avatar-button" aria-label="Abrir perfil" onClick={onProfile}><img src="/assets/alejandro/app-icon.png" alt="" /></button>} />
+      <button className="home-ai-shortcut" onClick={onAnalysis} aria-label="Abrir Alejandro IA">
+        <span className="home-ai-visual"><img src="/assets/alejandro/ai-neural-core.png" alt="" /></span>
+        <span className="home-ai-copy"><small>ALEJANDRO IA</small><strong>Tu progreso, analizado con contexto</strong><em>Entrenos, medidas y evolución en un solo lugar</em></span>
+        <ChevronRightIcon />
+      </button>
       <section className="mission-card">
         <div><small>{goalPlan ? "Objetivo de esta semana" : "Misión actual"}</small><h2>{goalPlan ? goalPlan.weeklyGoal : latest && hasTarget ? `Avanzar de ${first?.weight ?? latest.weight} kg a ${targetWeight} kg` : "Construir tu línea base con datos reales"}</h2><p>{goalPlan ? `Revisión: ${formatDate(goalPlan.reviewDate)}` : profile.objective}</p></div>
         <div className="progress-ring" style={{ "--progress": `${weightProgress}%` } as CSSProperties}><strong>{weightProgress}%</strong><span>rumbo</span></div>
@@ -1869,7 +1889,6 @@ function HomeScreen({ profile, goalPlan, water, waterGoal, completion, selectedD
         <button className="habit-card" onClick={onAnalysis}><span className="habit-glyph"><LightningBoltIcon /></span><small>Análisis</small><strong>Domingo</strong><em>Con evidencia</em></button>
       </Carousel>
       <button className="water-quick-action" onClick={onWater}><img src="/assets/alejandro/bottle-flat.png" alt="" /><span><small>Registro rápido</small><strong>Marcar botella de 1 L</strong></span><PlusIcon /></button>
-      <button className="insight-card" onClick={onAnalysis}><LightningBoltIcon /><span><small>Revisión semanal</small><strong>Volumen, fuerza, medidas y adherencia</strong></span><ChevronRightIcon /></button>
     </>
   );
 }
@@ -1892,6 +1911,7 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
   const [offset, setOffsetState] = useState(open ? -actionWidth : 0);
   const offsetRef = useRef(offset);
   const draggingRef = useRef(false);
+  const gestureAxisRef = useRef<"x" | "y" | null>(null);
   const startRef = useRef({ x: 0, y: 0, offset: 0 });
   const suppressClickUntilRef = useRef(0);
   const suppressDeleteClickUntilRef = useRef(0);
@@ -1912,7 +1932,7 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
       <button
         className="swipe-delete-action"
         aria-label={`Eliminar ${exercise.name}`}
-        aria-hidden={!open}
+        aria-hidden={!open && offset > -4}
         tabIndex={open ? 0 : -1}
         disabled={!open}
         onPointerDown={(event) => event.stopPropagation()}
@@ -1939,16 +1959,23 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
           if (event.pointerType === "mouse" && event.button !== 0) return;
           event.stopPropagation();
           draggingRef.current = true;
+          gestureAxisRef.current = null;
           setDragging(true);
           startRef.current = { x: event.clientX, y: event.clientY, offset: open ? -actionWidth : 0 };
-          event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={(event) => {
           if (!draggingRef.current) return;
-          event.stopPropagation();
           const deltaX = event.clientX - startRef.current.x;
           const deltaY = event.clientY - startRef.current.y;
-          if (Math.abs(deltaX) <= Math.abs(deltaY) || Math.abs(deltaX) < 4) return;
+          if (!gestureAxisRef.current) {
+            if (Math.hypot(deltaX, deltaY) < 10) return;
+            gestureAxisRef.current = Math.abs(deltaX) > Math.abs(deltaY) * 1.2 ? "x" : "y";
+          }
+          if (gestureAxisRef.current === "y") return;
+          event.stopPropagation();
+          if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
           suppressClickUntilRef.current = Date.now() + 300;
           setOffset(Math.max(-actionWidth, Math.min(0, startRef.current.offset + deltaX)));
         }}
@@ -1958,13 +1985,20 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
           draggingRef.current = false;
           setDragging(false);
           if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+          if (gestureAxisRef.current !== "x") {
+            gestureAxisRef.current = null;
+            setOffset(open ? -actionWidth : 0);
+            return;
+          }
           const shouldReveal = offsetRef.current <= -(actionWidth * .45);
           setOffset(shouldReveal ? -actionWidth : 0);
           onReveal(shouldReveal ? exercise.id : null);
+          gestureAxisRef.current = null;
         }}
         onPointerCancel={(event) => {
           event.stopPropagation();
           draggingRef.current = false;
+          gestureAxisRef.current = null;
           setDragging(false);
           setOffset(open ? -actionWidth : 0);
         }}
@@ -2050,9 +2084,10 @@ function ExerciseLibrary({ search, onSearch, muscle, onMuscle, equipment, onEqui
   onAdd: (id: string) => void; favoriteIds: string[]; onToggleFavorite: (id: string) => void; onBack: () => void;
 }) {
   const [visibleCount, setVisibleCount] = useState(10);
+  const hasSearch = Boolean(search.trim());
   const filtered = exerciseCatalog.filter((exercise) =>
-    (muscle === "Todos" || exercise.muscle === muscle) &&
-    (equipment === "Todo" || exercise.equipment === equipment) &&
+    (hasSearch || muscle === "Todos" || exercise.muscle === muscle) &&
+    (hasSearch || equipment === "Todo" || exercise.equipment === equipment) &&
     exercise.name.toLowerCase().includes(search.toLowerCase()),
   ).sort((a, b) => Number(favoriteIds.includes(b.id)) - Number(favoriteIds.includes(a.id)));
   const visibleExercises = filtered.slice(0, visibleCount);
@@ -2114,12 +2149,17 @@ function ExerciseLogger({ exercise, routine, sets, partnerId, defaultRestSeconds
     const timer = window.setInterval(() => setRestSeconds((current) => Math.max(0, current - 1)), 1000);
     return () => window.clearInterval(timer);
   }, [restSeconds > 0]);
+  const isCardio = exercise.muscle === "Cardio";
   const completed = sets.filter((set) => set.done);
   const best = completed.reduce((current, set) => {
+    if (isCardio) return current;
     const estimate = estimatedOneRepMax(Number(set.weight), Number(set.reps));
     return Math.max(current, estimate);
   }, 0);
-  const volume = completed.reduce((sum, set) => sum + Number(set.weight || 0) * Number(set.reps || 0), 0);
+  const volume = isCardio
+    ? completed.reduce((sum, set) => sum + Number(set.weight || 0), 0)
+    : completed.reduce((sum, set) => sum + Number(set.weight || 0) * Number(set.reps || 0), 0);
+  const peakSpeed = isCardio ? Math.max(0, ...completed.map((set) => Number(set.reps || 0))) : 0;
   const averageRpe = average(completed.map((set) => Number(set.rpe)));
   const partner = routine.find((item) => item.id === partnerId);
   const overloadAdvice = completed.length < 4
@@ -2135,14 +2175,15 @@ function ExerciseLogger({ exercise, routine, sets, partnerId, defaultRestSeconds
         <img src={exercise.image} alt={`Ejecución de ${exercise.name}`} />
       </section>
       <section className="set-card">
-        <div className="set-head"><span>Serie</span><span>Peso kg</span><span>Reps</span><span className="effort-heading">Esfuerzo<small>RPE</small></span><span /></div>
+        <div className="set-head"><span>{isCardio ? "Bloque" : "Serie"}</span><span>{isCardio ? "Min" : "Peso kg"}</span><span>{isCardio ? "km/h" : "Reps"}</span><span className="effort-heading">Esfuerzo<small>1 a 10</small></span><span /></div>
         {sets.map((set, index) => (
           <div className={set.done ? "set-row complete" : "set-row"} key={set.id}>
             <strong>{index + 1}</strong>
-            <KeyboardInput aria-label={`Peso serie ${index + 1}`} value={set.weight} onChange={(event) => onUpdate(set.id, "weight", event.target.value)} inputMode="decimal" />
-            <KeyboardInput aria-label={`Repeticiones serie ${index + 1}`} value={set.reps} onChange={(event) => onUpdate(set.id, "reps", event.target.value)} inputMode="numeric" />
-            <KeyboardInput aria-label={`Esfuerzo RPE de la serie ${index + 1}`} value={set.rpe} onChange={(event) => onUpdate(set.id, "rpe", event.target.value)} inputMode="decimal" placeholder="8" />
+            <KeyboardInput aria-label={isCardio ? `Minutos bloque ${index + 1}` : `Peso serie ${index + 1}`} value={set.weight} onChange={(event) => onUpdate(set.id, "weight", event.target.value)} inputMode="decimal" enterKeyHint="next" />
+            <KeyboardInput aria-label={isCardio ? `Velocidad bloque ${index + 1}` : `Repeticiones serie ${index + 1}`} value={set.reps} onChange={(event) => onUpdate(set.id, "reps", event.target.value)} inputMode={isCardio ? "decimal" : "numeric"} enterKeyHint="next" />
+            <KeyboardInput aria-label={`Esfuerzo RPE de la serie ${index + 1}`} value={set.rpe} onChange={(event) => onUpdate(set.id, "rpe", event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} inputMode="decimal" enterKeyHint="done" placeholder="8" />
             <button onClick={() => {
+              (document.activeElement as HTMLElement | null)?.blur();
               const willComplete = !set.done;
               onUpdate(set.id, "done", willComplete);
               if (willComplete && set.weight && set.reps && set.rpe) setRestSeconds(restPreset);
@@ -2181,9 +2222,19 @@ function ExerciseLogger({ exercise, routine, sets, partnerId, defaultRestSeconds
         </section>
       )}
       <section className="performance-card">
-        <div><small>Volumen registrado</small><strong>{volume.toLocaleString("es-CO")} kg</strong></div>
-        <div><small>e1RM estimado</small><strong>{best ? `${best.toFixed(1)} kg` : "—"}</strong></div>
-        <p>e1RM es una estimación orientativa basada en tus series; no sustituye una prueba máxima.</p>
+        {isCardio ? (
+          <>
+            <div><small>Tiempo completado</small><strong>{volume.toLocaleString("es-CO")} min</strong></div>
+            <div><small>Velocidad más alta</small><strong>{peakSpeed ? `${peakSpeed.toFixed(1)} km/h` : "—"}</strong></div>
+            <p><strong>Tiempo completado:</strong> suma los minutos de los bloques marcados. <strong>Velocidad más alta:</strong> el ritmo más rápido que registraste hoy.</p>
+          </>
+        ) : (
+          <>
+            <div><small>Trabajo total de hoy</small><strong>{volume.toLocaleString("es-CO")} kg</strong><em>Peso × repeticiones de todas las series terminadas.</em></div>
+            <div><small>Máximo estimado (e1RM)</small><strong>{best ? `${best.toFixed(1)} kg` : "—"}</strong><em>Tu fuerza aproximada para una sola repetición.</em></div>
+            <p><strong>No necesitas probar ese máximo.</strong> El e1RM sirve para comparar si tu fuerza sube con el tiempo; es una referencia calculada con las series que registras.</p>
+          </>
+        )}
       </section>
       <section className="overload-card">
         <div><LightningBoltIcon /><span><small>Sobrecarga progresiva</small><strong>Próximo paso</strong></span></div>
@@ -2221,7 +2272,9 @@ function WorkoutHistory({ history, onBack }: { history: SavedWorkout[]; onBack: 
                 {item.sets.map((set) => (
                   <article key={`${set.exerciseId}-${set.setNumber}`}>
                     <span><strong>{set.exercise}</strong><small>Serie {set.setNumber} · {set.muscle}</small></span>
-                    <em>{set.weightKg} kg × {set.reps}</em>
+                    <em>{set.muscle === "Cardio"
+                      ? `${set.durationMinutes || 0} min · ${set.speedKph || 0} km/h`
+                      : `${set.weightKg} kg × ${set.reps}`}</em>
                     <b>RPE {set.rpe}</b>
                   </article>
                 ))}
@@ -2544,6 +2597,7 @@ function AnalysisScreen({ weeklyPlan, measurements, history, profile, goalPlan, 
     }
   });
   const [analysisStatus, setAnalysisStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [analysisTab, setAnalysisTab] = useState<"resumen" | "tendencias" | "recomendaciones">("resumen");
   const [coachQuestion, setCoachQuestion] = useState("");
   const [coachAnswer, setCoachAnswer] = useState<CoachAnswer | null>(null);
   const [coachStatus, setCoachStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -2576,7 +2630,13 @@ function AnalysisScreen({ weeklyPlan, measurements, history, profile, goalPlan, 
           weeklyPlan[day].map((id) => exerciseCatalog.find((exercise) => exercise.id === id)?.name).filter(Boolean),
         ])),
         completedSets: completedSets.map((set) => ({
-          muscle: set.muscle, exercise: set.exercise, weightKg: set.weightKg, reps: set.reps, rpe: set.rpe,
+          muscle: set.muscle,
+          exercise: set.exercise,
+          weightKg: set.weightKg,
+          reps: set.reps,
+          rpe: set.rpe,
+          durationMinutes: set.durationMinutes,
+          speedKph: set.speedKph,
         })),
         measurements,
         workoutHistory: history,
@@ -2637,35 +2697,62 @@ function AnalysisScreen({ weeklyPlan, measurements, history, profile, goalPlan, 
       setCoachStatus("error");
     }
   };
+  const hasData = completedSets.length > 0 || measurements.length > 0;
 
   return (
     <>
-      <ScreenHeader eyebrow="Revisión semanal" title="Análisis IA" action={<span className="evidence-pill">Basado en datos</span>} />
-      <section className="analysis-lead"><LightningBoltIcon /><div><small>Semana actual · objetivo hipertrofia</small><h2>{aiAnalysis?.title || "Progreso sostenible"}</h2></div></section>
-      <section className="analysis-summary"><p>{aiAnalysis?.summary || <>Esta semana registraste <strong>{completedSets.length} series</strong>{completedSets.length ? <> con RPE medio <strong>{avgRpe.toFixed(1)}</strong></> : ""}. {latest && first ? <>Tu peso cambió <strong>{signed(latest.weight - first.weight)} kg</strong> y la cintura <strong>{signed(latest.waist - first.waist)} cm</strong> en el período registrado.</> : "Añade tu primera medición para combinar composición corporal y rendimiento."}</>}</p><div><span>Confianza del análisis</span><strong>{aiAnalysis?.confidence || confidence}</strong></div></section>
+      <ScreenHeader eyebrow="Inteligencia de entrenamiento" title="Alejandro IA" action={<span className={hasData ? "evidence-pill ready" : "evidence-pill"}>{hasData ? "Datos listos" : "En espera"}</span>} />
+      <section className="ai-neural-hero">
+        <div className="ai-neural-visual"><img src="/assets/alejandro/ai-neural-core.png" alt="Cerebro digital de Alejandro IA" /></div>
+        <div className="ai-neural-copy">
+          <small>LECTURA SEMANAL · HIPERTROFIA</small>
+          <h2>{aiAnalysis?.title || (hasData ? "Listo para encontrar patrones" : "Primero conoce tus datos")}</h2>
+          <p>{hasData ? "Cruza rendimiento, esfuerzo, medidas y constancia para explicarte qué está cambiando." : "Registra tu primer entrenamiento o una medición. Hasta entonces no inventará conclusiones."}</p>
+          <div className="ai-signal-row"><span>{completedSets.length} series</span><span>{measurements.length} mediciones</span><span>{currentWeekHistory.length} sesiones</span></div>
+        </div>
+      </section>
+      <section className="analysis-summary">
+        <div className="analysis-summary-heading"><span>Lectura actual</span><strong>Confianza {aiAnalysis?.confidence || confidence}</strong></div>
+        <p>{aiAnalysis?.summary || (hasData
+          ? <>Esta semana hay <strong>{completedSets.length} series terminadas</strong>{completedSets.length ? <> con esfuerzo medio <strong>{avgRpe.toFixed(1)} de 10</strong></> : ""}. {latest && first ? <>El peso cambió <strong>{signed(latest.weight - first.weight)} kg</strong> y la cintura <strong>{signed(latest.waist - first.waist)} cm</strong> en el período guardado.</> : "Añade medidas para cruzar rendimiento y cambios físicos."}</>
+          : "Aún no existe una base suficiente. Cuando registres datos reales, aquí aparecerá una lectura explicada y verificable.")}</p>
+      </section>
       {!aiConsent && <button className="privacy-notice" onClick={onPrivacy}><PersonIcon /><span><strong>Análisis IA desactivado</strong><small>Revisa qué datos se comparten y activa tu permiso.</small></span><ChevronRightIcon /></button>}
       <button className="primary-button analysis-button" onClick={generateAnalysis} disabled={analysisStatus === "loading" || (!completedSets.length && !measurements.length)}>
-        <LightningBoltIcon /> {analysisStatus === "loading" ? "Analizando métricas…" : !completedSets.length && !measurements.length ? "Faltan datos para analizar" : aiAnalysis ? "Actualizar análisis IA" : "Generar análisis IA"}
+        <LightningBoltIcon /> {analysisStatus === "loading" ? "Leyendo tus métricas…" : !hasData ? "Registra datos para comenzar" : aiAnalysis ? "Actualizar lectura semanal" : "Analizar mi semana"}
       </button>
-      {!completedSets.length && !measurements.length && <p className="analysis-error neutral">Finaliza un entrenamiento o registra una medición para crear un análisis personal. No generaremos recomendaciones como si existieran datos.</p>}
+      {!hasData && <p className="analysis-error neutral">La IA necesita al menos un entrenamiento finalizado o una medición. No mostrará recomendaciones ficticias.</p>}
       {first && latest && <button className="secondary-button export-pdf-button" onClick={() => exportProgressPdf(first, latest, measurements, history, aiAnalysis, physicalAnalysis)}><FileTextIcon /> Exportar análisis PDF</button>}
       {analysisStatus === "error" && <p className="analysis-error">No pude conectar con el analizador. Tus datos siguen guardados y puedes intentarlo de nuevo.</p>}
-      <div className="analysis-tabs"><button className="active">Resumen</button><button>Tendencias</button><button>Recomendaciones</button></div>
-      <section className="kpi-grid">
-        <KpiCard label="Series efectivas" value={String(hardSets)} note="RPE 7 o más" />
-        <KpiCard label="RPE alto" value={`${highRpe}/${completedSets.length}`} note="RPE 9 o más" />
-        <KpiCard label="Adherencia" value={`${adherence}%`} note={`${currentWeekHistory.length} de ${weekDays.length} sesiones`} />
-        <KpiCard label="Mediciones" value={String(measurements.length)} note="Misma condición" />
-      </section>
-      {physicalAnalysis && (
+      <div className="analysis-tabs" role="tablist" aria-label="Secciones del análisis">
+        <button role="tab" aria-selected={analysisTab === "resumen"} className={analysisTab === "resumen" ? "active" : ""} onClick={() => setAnalysisTab("resumen")}>Resumen</button>
+        <button role="tab" aria-selected={analysisTab === "tendencias"} className={analysisTab === "tendencias" ? "active" : ""} onClick={() => setAnalysisTab("tendencias")}>Tendencias</button>
+        <button role="tab" aria-selected={analysisTab === "recomendaciones"} className={analysisTab === "recomendaciones" ? "active" : ""} onClick={() => setAnalysisTab("recomendaciones")}>Acciones</button>
+      </div>
+      {analysisTab === "resumen" && <section className="kpi-grid">
+        <KpiCard label="Series exigentes" value={String(hardSets)} note="Esfuerzo 7 a 10" />
+        <KpiCard label="Cerca del límite" value={`${highRpe}/${completedSets.length}`} note="Esfuerzo 9 o 10" />
+        <KpiCard label="Sesiones hechas" value={`${currentWeekHistory.length}/${weekDays.length}`} note={`${adherence}% de la semana`} />
+        <KpiCard label="Mediciones guardadas" value={String(measurements.length)} note="Para ver cambios físicos" />
+      </section>}
+      {analysisTab === "resumen" && physicalAnalysis && (
         <section className="analysis-visual-summary">
           <div><CameraIcon /><span><small>Lectura visual más reciente</small><strong>{physicalAnalysis.title}</strong></span></div>
           <p>{physicalAnalysis.reportNote}</p>
           <span>Vista {physicalAnalysis.view} · comparabilidad {physicalAnalysis.comparability.rating} · confianza {physicalAnalysis.overallConfidence}</span>
         </section>
       )}
-      {(completedSets.length > 0 || measurements.length > 0) && <section className="recommendation-list">
-        <h2>Recomendaciones explicadas</h2>
+      {analysisTab === "tendencias" && <section className="analysis-detail-panel">
+        <small>QUÉ ESTÁ CAMBIANDO</small>
+        <h2>{hasData ? "Patrones de esta semana" : "Sin tendencia todavía"}</h2>
+        <p>{hasData
+          ? `Hay ${completedSets.length} series, ${currentWeekHistory.length} sesiones y ${measurements.length} mediciones disponibles. La lectura mejora cuando repites el registro varias semanas bajo condiciones parecidas.`
+          : "Una tendencia no se obtiene de un solo dato. Registra entrenamientos y medidas de forma constante para comparar semanas, no momentos aislados."}</p>
+        <div><span>Esfuerzo medio</span><strong>{completedSets.length ? `${avgRpe.toFixed(1)} de 10` : "Sin datos"}</strong></div>
+        <div><span>Constancia semanal</span><strong>{currentWeekHistory.length ? `${adherence}%` : "Sin datos"}</strong></div>
+      </section>}
+      {analysisTab === "recomendaciones" && hasData && <section className="recommendation-list">
+        <h2>Acciones explicadas</h2>
         {(aiAnalysis?.recommendations || [
           { title: "Completa primero el volumen planeado", action: `Tienes ${hardSets} series exigentes registradas. Mantén la técnica y agrega carga solo al completar el rango sin superar RPE 9.`, reason: "La progresión necesita una base repetible antes de subir la carga.", dataUsed: "series, repeticiones y RPE", confidence: confidence.toLowerCase() as "baja" | "media" },
           { title: "Evalúa tendencias, no un solo pesaje", action: "Compara el promedio semanal del peso con cintura, fuerza y fotos bajo el mismo protocolo.", reason: "Una sola medición puede variar por hidratación y condiciones de toma.", dataUsed: `${measurements.length} mediciones`, confidence: "media" as const },
@@ -2674,10 +2761,11 @@ function AnalysisScreen({ weeklyPlan, measurements, history, profile, goalPlan, 
           <article key={`${item.title}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{item.title}</strong><p>{item.action}</p><small>{item.reason} · Datos usados: {item.dataUsed} · Confianza {item.confidence}</small></div></article>
         ))}
       </section>}
-      {aiAnalysis && <section className="next-week-focus"><small>Foco de la próxima semana</small><strong>{aiAnalysis.nextWeekFocus}</strong></section>}
-      <EvidenceMatrix evidence={aiAnalysis?.evidence} />
+      {analysisTab === "recomendaciones" && !hasData && <section className="analysis-detail-panel empty"><small>PRÓXIMOS PASOS</small><h2>Primero crea tu línea base</h2><p>Finaliza un entrenamiento o registra peso y medidas. Con eso la IA podrá proponerte una acción concreta sin adivinar.</p></section>}
+      {analysisTab === "recomendaciones" && aiAnalysis && <section className="next-week-focus"><small>Foco de la próxima semana</small><strong>{aiAnalysis.nextWeekFocus}</strong></section>}
+      {analysisTab === "recomendaciones" && <EvidenceMatrix evidence={aiAnalysis?.evidence} />}
       <section className="coach-card">
-        <div className="coach-card-heading"><LightningBoltIcon /><div><small>Coach con base científica</small><strong>Pregunta sobre entrenamiento, comida, suplementos o farmacología</strong></div></div>
+        <div className="coach-card-heading"><img src="/assets/alejandro/ai-neural-core.png" alt="" /><div><small>CONSULTA DIRECTA</small><strong>Pregunta sobre entrenamiento, comida, suplementos o farmacología</strong></div></div>
         <label className="coach-input"><KeyboardInput value={coachQuestion} onChange={(event) => setCoachQuestion(event.target.value)} placeholder="Ej.: ¿qué evidencia tiene este suplemento?" /></label>
         <div className="coach-quick-questions">
           {["Cómo progresar cargas", "Creatina y evidencia", "Riesgos de péptidos"].map((question) => <button key={question} onClick={() => setCoachQuestion(question)}>{question}</button>)}

@@ -181,14 +181,21 @@ export function useKeyboardDismissDrag() {
 export function KeyboardInput(props: KeyboardInputProps) {
   const keyboard = useKeyboard();
   const { ref, ...inputProps } = props;
+  const usesNativeKeyboard =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0);
 
   return (
     <input
       {...inputProps}
       ref={ref}
       onFocus={(event) => {
-        keyboard.show(event.currentTarget);
+        if (!usesNativeKeyboard) keyboard.show(event.currentTarget);
         inputProps.onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        if (!usesNativeKeyboard && keyboard.focusedElement === event.currentTarget) keyboard.hide();
+        inputProps.onBlur?.(event);
       }}
     />
   );
@@ -196,13 +203,20 @@ export function KeyboardInput(props: KeyboardInputProps) {
 
 export function KeyboardTextarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const keyboard = useKeyboard();
+  const usesNativeKeyboard =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0);
 
   return (
     <textarea
       {...props}
       onFocus={(event) => {
-        keyboard.show(event.currentTarget);
+        if (!usesNativeKeyboard) keyboard.show(event.currentTarget);
         props.onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        if (!usesNativeKeyboard && keyboard.focusedElement === event.currentTarget) keyboard.hide();
+        props.onBlur?.(event);
       }}
     />
   );
