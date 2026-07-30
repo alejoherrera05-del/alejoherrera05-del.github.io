@@ -1080,3 +1080,330 @@ button { cursor: pointer; }
 .goal-plan-card footer small,
 .goal-plan-card footer span { font-size: 8px; text-transform: uppercase; }
 .goal-plan-card footer p { margin: 4px 0 7px; font-size: 9px; line-height: 1.4; }
+
+/* Experiencia móvil final: lectura cómoda, targets amplios y scroll estable. */
+.mobile-scroll {
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
+  touch-action: pan-y;
+}
+
+.mobile-scroll-content {
+  transform: none !important;
+}
+
+.app-content {
+  padding-right: 20px;
+  padding-left: 20px;
+  padding-bottom: calc(var(--mobile-safe-area-height, 34px) + 100px);
+}
+
+.app-content-deep {
+  padding-bottom: calc(var(--mobile-safe-area-height, 34px) + 28px);
+}
+
+.screen-header { margin-bottom: 22px; }
+.screen-header p { font-size: 13px; }
+.screen-header h1 {
+  margin-top: 6px;
+  font-size: 30px;
+  line-height: 1.12;
+}
+
+.section-title {
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+.section-title h2 { font-size: 20px; }
+.section-title button,
+.section-title span { font-size: 12px; }
+
+.bottom-nav {
+  height: calc(var(--mobile-safe-area-height, 34px) + 68px);
+  padding-top: 9px;
+}
+.nav-item {
+  gap: 5px;
+  min-height: 50px;
+  font-size: 11px;
+}
+.nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+.back-header {
+  grid-template-columns: 46px 1fr 58px;
+  min-height: 50px;
+  margin-bottom: 18px;
+}
+.back-header > button {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+.back-header > strong { font-size: 16px; }
+.library-count,
+.logger-muscle { font-size: 13px; }
+
+.search-field {
+  height: 54px;
+  padding: 0 16px;
+  border-radius: 16px;
+}
+.search-field input { font-size: 16px; }
+.filter-label {
+  margin-top: 22px;
+  margin-bottom: 10px;
+}
+.filter-label span { font-size: 16px; }
+.filter-label small { font-size: 13px; }
+
+.chip-scroll {
+  gap: 9px;
+  margin-right: -20px;
+  margin-left: -20px;
+  padding-right: 20px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+}
+.chip-scroll button {
+  min-height: 44px;
+  padding: 11px 16px;
+  font-size: 13px;
+}
+.equipment-chips { margin-top: 2px; }
+
+.library-list {
+  gap: 12px;
+  margin-top: 14px;
+}
+.library-row {
+  grid-template-columns: 108px minmax(0, 1fr) 44px;
+  gap: 13px;
+  min-height: 126px;
+  padding: 9px;
+  border-radius: 20px;
+}
+.library-row > img {
+  width: 108px;
+  height: 108px;
+  border-radius: 15px;
+}
+.library-row span {
+  font-size: 12px;
+  line-height: 1.3;
+}
+.library-row strong {
+  margin-top: 7px;
+  font-size: 16px;
+  line-height: 1.2;
+}
+.library-row small {
+  margin-top: 7px;
+  font-size: 13px;
+}
+.library-actions { gap: 8px; }
+.library-row .library-actions button {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+.library-row .library-actions .favorite { font-size: 20px; }
+
+.library-pagination {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 20px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.library-more {
+  min-height: 52px;
+  margin: 0;
+  font-size: 14px;
+}
+.library-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 36px 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  text-align: center;
+}
+.library-empty svg {
+  width: 26px;
+  height: 26px;
+  color: var(--violet);
+}
+.library-empty strong { font-size: 16px; }
+.library-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.session-summary { border-radius: 18px; }
+.session-summary div {
+  min-height: 76px;
+  padding: 16px 12px;
+}
+.session-summary small { font-size: 12px; }
+.session-summary strong {
+  margin-top: 8px;
+  font-size: 16px;
+}
+
+.exercise-list { border-radius: 20px; }
+.exercise-row {
+  grid-template-columns: 34px minmax(0, 1fr) 22px;
+  gap: 12px;
+  min-height: 88px;
+  padding: 15px 14px;
+}
+.exercise-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  font-size: 12px;
+}
+.exercise-row strong {
+  font-size: 15px;
+  line-height: 1.25;
+}
+.exercise-row small {
+  margin-top: 7px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.exercise-row span:nth-child(2) em {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.swipe-delete-action {
+  width: 96px;
+  gap: 6px;
+  font-size: 12px;
+}
+.swipe-delete-action svg {
+  width: 21px;
+  height: 21px;
+}
+
+.exercise-hero {
+  grid-template-columns: minmax(0, 1fr) 150px;
+  min-height: 190px;
+  border-radius: 22px;
+}
+.exercise-hero > div { padding: 22px 4px 20px 18px; }
+.exercise-hero span { font-size: 12px; }
+.exercise-hero h1 {
+  margin: 10px 0;
+  font-size: 27px;
+  line-height: 1.08;
+}
+.exercise-hero p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.exercise-hero img {
+  width: 150px;
+  height: 190px;
+}
+
+.set-card {
+  margin-top: 16px;
+  border-radius: 20px;
+}
+.set-head,
+.set-row {
+  grid-template-columns: 38px repeat(3, minmax(0, 1fr)) 40px;
+  gap: 7px;
+}
+.set-head {
+  min-height: 46px;
+  padding: 10px;
+  font-size: 11px;
+}
+.effort-heading small { font-size: 10px; }
+.set-row {
+  min-height: 66px;
+  padding: 8px 10px;
+}
+.set-row > strong { font-size: 13px; }
+.set-row input {
+  height: 46px;
+  border-radius: 11px;
+  font-size: 16px;
+}
+.set-row button {
+  width: 40px;
+  height: 40px;
+}
+.add-set {
+  min-height: 52px;
+  font-size: 13px;
+}
+
+.rpe-guide {
+  margin: 12px;
+  padding: 16px;
+  border-radius: 17px;
+}
+.rpe-guide-title {
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+}
+.rpe-guide-title strong { font-size: 14px; }
+.rpe-guide-title small,
+.rpe-guide > p {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.rpe-scale {
+  gap: 7px;
+  margin-top: 13px;
+}
+.rpe-scale > span {
+  gap: 5px;
+  min-height: 66px;
+  padding: 10px 4px;
+}
+.rpe-scale b { font-size: 19px; }
+.rpe-scale em { font-size: 10px; }
+
+.rest-timer {
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  padding: 16px;
+}
+.rest-timer small { font-size: 12px; }
+.rest-timer strong {
+  margin-top: 4px;
+  font-size: 16px;
+}
+.rest-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.rest-actions button {
+  min-height: 46px;
+  font-size: 13px;
+}
+
+.performance-card {
+  margin-top: 14px;
+  padding: 17px;
+}
+.performance-card small { font-size: 12px; }
+.performance-card strong { font-size: 17px; }
+.performance-card p {
+  font-size: 12px;
+  line-height: 1.5;
+}

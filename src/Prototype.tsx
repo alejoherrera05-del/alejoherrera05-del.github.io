@@ -561,15 +561,23 @@ function createInitialAppState(): AppStateV2 {
 }
 
 async function warmAppCache(onProgress: (value: number) => void) {
+  onProgress(12);
+  try {
+    await fetch("/assets/alejandro/splash-v6-mobile.jpg", { cache: "force-cache" });
+  } catch {
+    // The image element still reports its own loading error if the cover is unavailable.
+  }
+  onProgress(100);
+}
+
+async function warmExerciseCache() {
   const assets = Array.from(new Set([
     "/assets/alejandro/app-icon.png",
-    "/assets/alejandro/splash-v6.png",
     "/assets/alejandro/bottle-flat.png",
     "/assets/alejandro/measurement-guide.png",
     ...exerciseCatalog.map((exercise) => exercise.image),
   ]));
   let cursor = 0;
-  let completed = 0;
   const worker = async () => {
     while (cursor < assets.length) {
       const asset = assets[cursor];
@@ -577,16 +585,11 @@ async function warmAppCache(onProgress: (value: number) => void) {
       try {
         await fetch(asset, { cache: "force-cache" });
       } catch {
-        // A missing optional illustration must not block the app.
+        // The library remains usable even if an optional image is unavailable.
       }
-      completed += 1;
-      onProgress(Math.round((completed / assets.length) * 92));
     }
   };
-  await Promise.all(Array.from({ length: Math.min(6, assets.length) }, worker));
-  onProgress(96);
-  await Promise.resolve();
-  onProgress(100);
+  await Promise.all(Array.from({ length: Math.min(2, assets.length) }, worker));
 }
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof HomeIcon }> = [
@@ -774,8 +777,8 @@ export default function Prototype() {
 
   useEffect(() => {
     let cancelled = false;
-    const warmStart = localStorage.getItem("alejandro:cache-version") === "v6";
-    const minimumDisplay = new Promise((resolve) => window.setTimeout(resolve, warmStart ? 350 : 1800));
+    const warmStart = localStorage.getItem("alejandro:cache-version") === "v7";
+    const minimumDisplay = new Promise((resolve) => window.setTimeout(resolve, warmStart ? 180 : 550));
     void Promise.all([
       warmAppCache((progress) => {
         if (!cancelled) setBootProgress((current) => Math.max(current, progress));
@@ -785,8 +788,9 @@ export default function Prototype() {
       if (cancelled) return;
       setBootProgress(100);
       setBootReady(true);
-      localStorage.setItem("alejandro:cache-version", "v6");
+      localStorage.setItem("alejandro:cache-version", "v7");
       void navigator.storage?.persist?.().catch(() => false);
+      window.setTimeout(() => void warmExerciseCache(), 0);
     });
     return () => { cancelled = true; };
   }, []);
@@ -1446,7 +1450,7 @@ export default function Prototype() {
   if (!entered) {
     return (
       <section className="splash-screen" aria-label="Bienvenida a Sistema Alejandro">
-        <img src="/assets/alejandro/splash-v6.png" alt="Alejandro preparado para entrenar al amanecer" className="splash-image" draggable={false} />
+        <img src="/assets/alejandro/splash-v6-mobile.jpg" alt="Alejandro preparado para entrenar al amanecer" className="splash-image" draggable={false} fetchPriority="high" decoding="async" />
         <div className="splash-shade" />
         <div className="splash-brand">
           <img className="brand-logo" src="/assets/alejandro/app-icon.png" alt="Símbolo de Sistema Alejandro" />
@@ -1460,9 +1464,9 @@ export default function Prototype() {
           <blockquote key={bootQuoteIndex}>“{bootQuotes[bootQuoteIndex].quote}”</blockquote>
           <cite>{bootQuotes[bootQuoteIndex].author}</cite>
           <div className="boot-status" aria-live="polite">
-            <div><span>{bootReady ? "Todo listo" : bootProgress < 55 ? "Preparando biblioteca" : "Optimizando acceso local"}</span><strong>{bootProgress}%</strong></div>
+            <div><span>{bootReady ? "Todo listo" : "Cargando portada"}</span><strong>{bootProgress}%</strong></div>
             <div className="boot-progress"><i style={{ width: `${bootProgress}%` }} /></div>
-            <small>{bootReady ? "Rutinas, historial y recursos disponibles sin esperas repetidas." : "La primera preparación evita cargas al navegar después."}</small>
+            <small>{bootReady ? "Las ilustraciones continúan preparándose en segundo plano." : "La portada tiene prioridad para abrir la app cuanto antes."}</small>
           </div>
           <div className="enter-slot">
             {bootReady && (
@@ -1884,12 +1888,13 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const actionWidth = 86;
+  const actionWidth = 96;
   const [offset, setOffsetState] = useState(open ? -actionWidth : 0);
   const offsetRef = useRef(offset);
   const draggingRef = useRef(false);
   const startRef = useRef({ x: 0, y: 0, offset: 0 });
   const suppressClickUntilRef = useRef(0);
+  const suppressDeleteClickUntilRef = useRef(0);
   const [dragging, setDragging] = useState(false);
   const done = sets.some((set) => set.done);
 
@@ -1910,7 +1915,19 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
         aria-hidden={!open}
         tabIndex={open ? 0 : -1}
         disabled={!open}
-        onClick={() => onDelete(exercise.id)}
+        onPointerDown={(event) => event.stopPropagation()}
+        onPointerUp={(event) => {
+          event.stopPropagation();
+          if (event.pointerType === "mouse") return;
+          event.preventDefault();
+          suppressDeleteClickUntilRef.current = Date.now() + 500;
+          onDelete(exercise.id);
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (Date.now() < suppressDeleteClickUntilRef.current) return;
+          onDelete(exercise.id);
+        }}
       >
         <TrashIcon />
         <span>Eliminar</span>
@@ -1919,7 +1936,8 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
         className={dragging ? "exercise-row swiping" : "exercise-row"}
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDown={(event) => {
-          if (event.button !== 0) return;
+          if (event.pointerType === "mouse" && event.button !== 0) return;
+          event.stopPropagation();
           draggingRef.current = true;
           setDragging(true);
           startRef.current = { x: event.clientX, y: event.clientY, offset: open ? -actionWidth : 0 };
@@ -1927,6 +1945,7 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
         }}
         onPointerMove={(event) => {
           if (!draggingRef.current) return;
+          event.stopPropagation();
           const deltaX = event.clientX - startRef.current.x;
           const deltaY = event.clientY - startRef.current.y;
           if (Math.abs(deltaX) <= Math.abs(deltaY) || Math.abs(deltaX) < 4) return;
@@ -1935,6 +1954,7 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
         }}
         onPointerUp={(event) => {
           if (!draggingRef.current) return;
+          event.stopPropagation();
           draggingRef.current = false;
           setDragging(false);
           if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -1942,7 +1962,8 @@ function SwipeExerciseRow({ exercise, index, sets, partner, open, onReveal, onOp
           setOffset(shouldReveal ? -actionWidth : 0);
           onReveal(shouldReveal ? exercise.id : null);
         }}
-        onPointerCancel={() => {
+        onPointerCancel={(event) => {
+          event.stopPropagation();
           draggingRef.current = false;
           setDragging(false);
           setOffset(open ? -actionWidth : 0);
@@ -2028,11 +2049,14 @@ function ExerciseLibrary({ search, onSearch, muscle, onMuscle, equipment, onEqui
   equipment: Equipment | "Todo"; onEquipment: (value: Equipment | "Todo") => void; routineIds: string[];
   onAdd: (id: string) => void; favoriteIds: string[]; onToggleFavorite: (id: string) => void; onBack: () => void;
 }) {
+  const [visibleCount, setVisibleCount] = useState(10);
   const filtered = exerciseCatalog.filter((exercise) =>
     (muscle === "Todos" || exercise.muscle === muscle) &&
     (equipment === "Todo" || exercise.equipment === equipment) &&
     exercise.name.toLowerCase().includes(search.toLowerCase()),
   ).sort((a, b) => Number(favoriteIds.includes(b.id)) - Number(favoriteIds.includes(a.id)));
+  const visibleExercises = filtered.slice(0, visibleCount);
+  useEffect(() => setVisibleCount(10), [search, muscle, equipment]);
   return (
     <>
       <BackHeader title="Biblioteca de ejercicios" onBack={onBack} action={<span className="library-count">{exerciseCatalog.length}</span>} />
@@ -2045,7 +2069,7 @@ function ExerciseLibrary({ search, onSearch, muscle, onMuscle, equipment, onEqui
         {(["Todo", "Barra", "Mancuernas", "Máquina", "Polea", "Peso corporal"] as Array<Equipment | "Todo">).map((item) => <button key={item} className={equipment === item ? "active" : ""} onClick={() => onEquipment(item)}>{item}</button>)}
       </div>
       <section className="library-list">
-        {filtered.map((exercise) => (
+        {visibleExercises.map((exercise) => (
           <article className="library-row" key={exercise.id}>
             <img src={exercise.image} alt={`Ilustración de ${exercise.name}`} loading="lazy" />
             <div><span>{exercise.muscle} · {exercise.equipment}</span><strong>{exercise.name}</strong><small>{exercise.prescription}</small></div>
@@ -2056,6 +2080,23 @@ function ExerciseLibrary({ search, onSearch, muscle, onMuscle, equipment, onEqui
           </article>
         ))}
       </section>
+      {!filtered.length && (
+        <section className="library-empty">
+          <MagnifyingGlassIcon />
+          <strong>No encontramos ese ejercicio</strong>
+          <p>Prueba otro nombre o cambia los filtros.</p>
+        </section>
+      )}
+      {!!filtered.length && (
+        <div className="library-pagination">
+          <span>Mostrando {visibleExercises.length} de {filtered.length}</span>
+          {visibleExercises.length < filtered.length && (
+            <button className="secondary-button library-more" onClick={() => setVisibleCount((current) => current + 10)}>
+              Mostrar 10 más
+            </button>
+          )}
+        </div>
+      )}
     </>
   );
 }
