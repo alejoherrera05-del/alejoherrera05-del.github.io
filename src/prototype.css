@@ -11,6 +11,64 @@
   --gold: #d7ad7c;
 }
 
+html,
+body,
+#root {
+  background: var(--bg);
+}
+
+/* The public app is the product itself, not a device-preview canvas. */
+.phone-stage {
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100vh;
+  padding: 0 !important;
+  overflow: hidden;
+  background: var(--bg);
+}
+.phone-scale-box {
+  width: min(100vw, 430px) !important;
+  height: 100dvh !important;
+  min-height: 100vh;
+}
+.phone-device {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+}
+.device-screen {
+  --mobile-safe-area-top: env(safe-area-inset-top, 0px);
+  --device-safe-area-bottom: env(safe-area-inset-bottom, 0px) !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  background: var(--bg) !important;
+  box-shadow: none !important;
+  cursor: auto !important;
+  user-select: auto !important;
+}
+.device-screen,
+.device-screen * { cursor: auto !important; }
+.device-menu-bar,
+.phone-bezel,
+.status-bar,
+.home-indicator-svg,
+.android-navigation-bar,
+.mobile-cursor { display: none !important; }
+
+@media (min-width: 521px) {
+  .device-screen {
+    box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 22px 80px rgba(0,0,0,.45) !important;
+  }
+}
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
