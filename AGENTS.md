@@ -78,6 +78,11 @@ When any text-entry control loses focus, dismiss the simulated keyboard. If the 
 - No incluir seguimiento del sueño ni copy relacionado con sueño.
 - La identidad visual propia debe ser plana, geométrica y contemporánea; evitar logos 3D, biseles, metal, vidrio y efectos pasados de moda.
 - El icono de Sistema Alejandro se usa como logo de entrada, favicon, Apple touch icon e icono instalable.
+- Las máquinas reales del gimnasio pueden tener un nombre coloquial y otro técnico. La biblioteca debe conservar ambos como términos de búsqueda, mostrar el nombre técnico junto al alias más reconocible y no inventar aislamiento muscular donde el movimiento siga siendo compuesto.
+- En la máquina de palanca mostrada por el usuario, “Buenos días” se ejecuta mirando hacia adentro y la sentadilla mirando hacia afuera; deben existir como ejercicios separados con ilustraciones de orientación inequívoca.
+- La prensa vertical inversa conocida en el gimnasio como “pollo asado” se registra como una prensa compuesta con énfasis en glúteos, no como aislamiento femoral. La orientación normal queda como variante de cuádriceps.
+- Aducción y abducción de cadera son ejercicios distintos: cerrar las piernas trabaja aductores; abrirlas enfatiza glúteo medio. Deben tener nombres, filtros e ilustraciones separados.
+- La “Butt Blaster” tumbada de las fotos se ejecuta en posición de rana, con rodillas abiertas y pies juntos sobre el apoyo mientras las piernas se recogen y extienden; no debe confundirse ni dibujarse como curl femoral convencional.
 - El acabado debe sentirse iOS: jerarquía limpia, controles táctiles claros, grupos visuales sobrios, desenfoque contenido y microdetalles discretos.
 - La fidelidad no es solo visual: el flujo principal debe registrar series con peso, repeticiones y RPE, conservar historial y alimentar métricas de progreso.
 - Progreso debe incluir medidas actuales, historial por periodo, fotos por vista y comparación entre dos fechas.

@@ -39,7 +39,7 @@ type NutritionMode = "suplementos" | "hidratacion";
 type TrainingView = "rutina" | "biblioteca" | "registro" | "historial";
 type ProgressSection = "medidas" | "fotos";
 type MeasureView = "actual" | "historial" | "comparar";
-type Muscle = "Pecho" | "Espalda" | "Hombros" | "Bíceps" | "Tríceps" | "Cuádriceps" | "Glúteos" | "Femorales" | "Abdominales" | "Cardio";
+type Muscle = "Pecho" | "Espalda" | "Hombros" | "Bíceps" | "Tríceps" | "Cuádriceps" | "Glúteos" | "Femorales" | "Aductores" | "Abdominales" | "Cardio";
 type Equipment = "Barra" | "Mancuernas" | "Máquina" | "Polea" | "Peso corporal";
 type WeekDay = "Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes";
 type WeeklyPlan = Record<WeekDay, string[]>;
@@ -52,6 +52,7 @@ type ExerciseDefinition = {
   image: string;
   prescription: string;
   cue: string;
+  aliases: string[];
 };
 
 type WorkoutSet = {
@@ -244,7 +245,7 @@ type CoachAnswer = {
   evidence: EvidenceItem[];
 };
 
-const exerciseNames: Record<Muscle, Array<[string, Equipment, string, string]>> = {
+const exerciseNames: Record<Muscle, Array<[string, Equipment, string, string, string?]>> = {
   Pecho: [
     ["Press banca", "Barra", "4 × 6–8", "Escápulas estables; controla el descenso."],
     ["Press inclinado", "Mancuernas", "3 × 8–10", "Antebrazos verticales y recorrido cómodo."],
@@ -318,6 +319,8 @@ const exerciseNames: Record<Muscle, Array<[string, Equipment, string, string]>> 
     ["Sentadilla búlgara", "Mancuernas", "3 × 8–12", "Baja vertical y apoya todo el pie delantero."],
     ["Sentadilla goblet", "Mancuernas", "3 × 10–15", "Mantén la carga cerca del pecho."],
     ["Zancada caminando", "Mancuernas", "3 × 10–14", "Da pasos estables y controla la rodilla."],
+    ["Sentadilla en máquina de palanca · mirando afuera", "Máquina", "4 × 8–12", "Mira hacia afuera, coloca ambos hombros bajo las almohadillas y baja con todo el pie apoyado. La orientación es la contraria al buenos días.", "sentadilla super squat|sentadilla v squat|sentadilla en la máquina de buenos días|sentadilla mirando hacia afuera"],
+    ["Prensa vertical guiada", "Máquina", "4 × 8–12", "Apoya espalda y pelvis, coloca ambos pies de forma simétrica y empuja sin bloquear las rodillas. Usa los seguros de la guía.", "prensa vertical normal|pollo asado normal|prensa de cuádriceps"],
   ],
   Glúteos: [
     ["Hip thrust", "Barra", "4 × 8–12", "Termina con pelvis neutra, sin arquear la espalda."],
@@ -325,9 +328,11 @@ const exerciseNames: Record<Muscle, Array<[string, Equipment, string, string]>> 
     ["Patada de glúteo", "Polea", "3 × 12–15", "Mueve la cadera sin rotar el tronco."],
     ["Búlgara glúteo", "Mancuernas", "3 × 8–12", "Paso largo y torso ligeramente inclinado."],
     ["Peso muerto sumo", "Barra", "3 × 5–8", "Empuja el suelo con rodillas hacia afuera."],
-    ["Abducción de cadera", "Máquina", "3 × 15–20", "Evita usar impulso."],
+    ["Abducción de cadera en máquina · piernas abren", "Máquina", "4 × 12–20", "Pon las almohadillas por fuera de las rodillas y abre las piernas con control. Aquí el objetivo principal es el glúteo medio.", "aperturas piernas afuera|máquina de abrir piernas|abductores"],
     ["Zancada inversa", "Mancuernas", "3 × 8–12", "Paso atrás largo y apoyo estable."],
     ["Step-up alto", "Mancuernas", "3 × 8–12", "Sube con la pierna de apoyo, sin saltar."],
+    ["Prensa vertical inversa · “pollo asado”", "Máquina", "4 × 8–12", "Usa la orientación inversa de tu gimnasio y empuja con la pelvis estable. Regístrala como prensa compuesta con énfasis en glúteos: no como aislamiento de femorales.", "pollo asado|prensa invertida|prensa de femorales|prensa vertical pies altos"],
+    ["Prensa rana tumbado · Butt Blaster", "Máquina", "4 × 10–15", "Túmbate boca abajo, abre rodillas en posición de rana y junta los pies sobre el apoyo. Recoge y extiende las piernas sin despegar la pelvis del banco.", "butt blaster|rana en máquina|máquina de glúteo acostado|frog press|prensa de glúteo tumbado"],
   ],
   Femorales: [
     ["Peso muerto rumano", "Barra", "4 × 6–10", "Lleva la cadera atrás con columna neutra."],
@@ -338,6 +343,10 @@ const exerciseNames: Record<Muscle, Array<[string, Equipment, string, string]>> 
     ["Buenos días", "Barra", "3 × 8–12", "Carga moderada y bisagra controlada."],
     ["Rumano unilateral", "Mancuernas", "3 × 8–12", "Cadera cuadrada y pie de apoyo firme."],
     ["Pull-through", "Polea", "3 × 12–15", "Extiende la cadera, no la espalda."],
+    ["Buenos días en máquina de palanca · mirando adentro", "Máquina", "4 × 8–12", "Mira hacia la máquina, apoya los hombros y lleva la cadera atrás con rodillas suaves y columna neutra. El movimiento es una bisagra, no una sentadilla.", "buenos días máquina|good morning machine|buenos días super squat|buenos días mirando hacia adentro"],
+  ],
+  Aductores: [
+    ["Aducción de cadera en máquina · piernas cierran", "Máquina", "4 × 12–20", "Pon las almohadillas por dentro de las rodillas y cierra las piernas con control. No rebotes al volver a abrir.", "aperturas piernas adentro|máquina de cerrar piernas|aductores en máquina"],
   ],
   Abdominales: [
     ["Crunch en polea", "Polea", "3 × 10–15", "Acerca costillas a pelvis sin tirar del cuello."],
@@ -417,14 +426,18 @@ const exerciseImageOverride: Record<string, string> = {
   "Sentadilla búlgara": "/assets/exercises/quads-bulgarian-split.png",
   "Sentadilla goblet": "/assets/exercises/quads-goblet-squat.png",
   "Zancada caminando": "/assets/exercises/quads-walking-lunge.png",
+  "Sentadilla en máquina de palanca · mirando afuera": "/assets/exercises/quads-leverage-squat-outward-v1.png",
+  "Prensa vertical guiada": "/assets/exercises/quads-vertical-leg-press-v1.png",
   "Hip thrust": "/assets/exercises/glutes-hip-thrust.png",
   "Puente de glúteos": "/assets/exercises/glutes-bridge.png",
   "Patada de glúteo": "/assets/exercises/glutes-cable-kickback.png",
   "Búlgara glúteo": "/assets/exercises/glutes-bulgarian-split.png",
   "Peso muerto sumo": "/assets/exercises/glutes-sumo-deadlift.png",
-  "Abducción de cadera": "/assets/exercises/glutes-abduction-machine.png",
+  "Abducción de cadera en máquina · piernas abren": "/assets/exercises/glutes-abduction-machine-v2.png",
   "Zancada inversa": "/assets/exercises/glutes-reverse-lunge.png",
   "Step-up alto": "/assets/exercises/glutes-high-stepup.png",
+  "Prensa vertical inversa · “pollo asado”": "/assets/exercises/glutes-vertical-leg-press-inverse-v1.png",
+  "Prensa rana tumbado · Butt Blaster": "/assets/exercises/glutes-prone-frog-press-v2.png",
   "Peso muerto rumano": "/assets/exercises/hamstrings-rdl.png",
   "Peso muerto convencional": "/assets/exercises/hamstrings-conventional-deadlift.png",
   "Curl femoral sentado": "/assets/exercises/hamstrings-seated-curl.png",
@@ -433,6 +446,8 @@ const exerciseImageOverride: Record<string, string> = {
   "Buenos días": "/assets/exercises/hamstrings-good-morning.png",
   "Rumano unilateral": "/assets/exercises/hamstrings-single-leg-rdl.png",
   "Pull-through": "/assets/exercises/hamstrings-cable-pull-through.png",
+  "Buenos días en máquina de palanca · mirando adentro": "/assets/exercises/hamstrings-machine-good-morning-v1.png",
+  "Aducción de cadera en máquina · piernas cierran": "/assets/exercises/adductors-machine-v1.png",
   "Crunch en polea": "/assets/exercises/abs-cable-crunch.png",
   "Elevación de piernas": "/assets/exercises/abs-hanging-leg-raise.png",
   "Rueda abdominal": "/assets/exercises/abs-wheel-rollout.png",
@@ -453,7 +468,7 @@ const imageForExercise = (name: string, equipment: Equipment) => {
 };
 
 const exerciseCatalog: ExerciseDefinition[] = Object.entries(exerciseNames).flatMap(([muscle, items]) =>
-  items.map(([name, equipment, prescription, cue], index) => ({
+  items.map(([name, equipment, prescription, cue, aliases], index) => ({
     id: `${muscle.toLowerCase()}-${index}`,
     name,
     muscle: muscle as Muscle,
@@ -461,6 +476,7 @@ const exerciseCatalog: ExerciseDefinition[] = Object.entries(exerciseNames).flat
     image: imageForExercise(name, equipment),
     prescription: prescription.replace(/^\d+/, "4"),
     cue,
+    aliases: aliases?.split("|") || [],
   })),
 );
 
@@ -2085,10 +2101,14 @@ function ExerciseLibrary({ search, onSearch, muscle, onMuscle, equipment, onEqui
 }) {
   const [visibleCount, setVisibleCount] = useState(10);
   const hasSearch = Boolean(search.trim());
+  const normalizedSearch = search.trim().toLowerCase();
   const filtered = exerciseCatalog.filter((exercise) =>
     (hasSearch || muscle === "Todos" || exercise.muscle === muscle) &&
     (hasSearch || equipment === "Todo" || exercise.equipment === equipment) &&
-    exercise.name.toLowerCase().includes(search.toLowerCase()),
+    [exercise.name, exercise.muscle, exercise.equipment, ...exercise.aliases]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedSearch),
   ).sort((a, b) => Number(favoriteIds.includes(b.id)) - Number(favoriteIds.includes(a.id)));
   const visibleExercises = filtered.slice(0, visibleCount);
   useEffect(() => setVisibleCount(10), [search, muscle, equipment]);
@@ -2107,7 +2127,12 @@ function ExerciseLibrary({ search, onSearch, muscle, onMuscle, equipment, onEqui
         {visibleExercises.map((exercise) => (
           <article className="library-row" key={exercise.id}>
             <img src={exercise.image} alt={`Ilustración de ${exercise.name}`} loading="lazy" />
-            <div><span>{exercise.muscle} · {exercise.equipment}</span><strong>{exercise.name}</strong><small>{exercise.prescription}</small></div>
+            <div>
+              <span>{exercise.muscle} · {exercise.equipment}</span>
+              <strong>{exercise.name}</strong>
+              <small>{exercise.prescription}</small>
+              {!!exercise.aliases.length && <em className="exercise-alias">También: {exercise.aliases[0]}</em>}
+            </div>
             <div className="library-actions">
               <button className={favoriteIds.includes(exercise.id) ? "favorite active" : "favorite"} onClick={() => onToggleFavorite(exercise.id)} aria-label={`${favoriteIds.includes(exercise.id) ? "Quitar" : "Agregar"} ${exercise.name} ${favoriteIds.includes(exercise.id) ? "de" : "a"} favoritos`}>★</button>
               <button onClick={() => onAdd(exercise.id)} aria-label={`Agregar ${exercise.name}`}>{routineIds.includes(exercise.id) ? <ChevronRightIcon /> : <PlusIcon />}</button>
@@ -2638,6 +2663,15 @@ function AnalysisScreen({ weeklyPlan, measurements, history, profile, goalPlan, 
           durationMinutes: set.durationMinutes,
           speedKph: set.speedKph,
         })),
+        exerciseContext: Array.from(new Set(completedSets.map((set) => set.exercise))).map((exerciseName) => {
+          const definition = exerciseCatalog.find((exercise) => exercise.name === exerciseName);
+          return {
+            exercise: exerciseName,
+            primaryMuscle: definition?.muscle || "Sin clasificar",
+            equipment: definition?.equipment || "Sin clasificar",
+            coachingCue: definition?.cue || "",
+          };
+        }),
         measurements,
         workoutHistory: history,
         profile,
